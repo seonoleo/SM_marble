@@ -176,7 +176,7 @@ int main(int argc, const char * argv[]) {
     
     
     //3. festival card config 
-    if ((fp = f open(FESTFILEPATH,"r")) == NULL)
+    if ((fp = fopen(FESTFILEPATH,"r")) == NULL)
     {
         printf("[ERROR] failed to open %s. This file should be in the same directory of SMMarble.exe.\n", FESTFILEPATH);
         return -1;
