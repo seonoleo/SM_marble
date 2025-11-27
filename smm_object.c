@@ -23,7 +23,7 @@
 #define SMMNODE_TYPE_FESTIVAL     6
 
 
-static char smmNodeName [MAX_NODETYPE][MAX_CHARNAME]={
+static char smmObj_NodeName [MAX_NODETYPE][MAX_CHARNAME]={
   "lecture",
   "restaurant",   
   "laboratory",
@@ -34,20 +34,33 @@ static char smmNodeName [MAX_NODETYPE][MAX_CHARNAME]={
 }
 
 static int smm_nodeNr=0;
-static char smm_name[MAX_NODENR][MAX_CHARNAME];
-static int smm_type[MAX_NODENR];
-static int smm_credit[MAX_NODENR];
-static int smm_energy[MAX_NODENR];
+
+
+
+
+
+typedef struct
+{
+        char name[MAX_CHARNAME];
+        int type;
+        int credit;
+        int energy;
+} smmObj_board_t;
+
+//structure instance array definition
+static smmObj_board_t smmObj_board[MAX_NODENR];
+
+ 
 
 //object generation
 int smmObj_genNode(char* name, int type, int credit, int energy)
 {
     strcpy(smm_name[smm_nodeNr],name);
-    smm_type[smm_nodeNr]=type;
-    smm_credit[smm_nodeNr]=credit;
-    smm_energy[smm_nodeNr]=energy;
+    smm_type[smm_nodeNr].type=type;
+    smm_credit[smm_nodeNr].credit=credit;
+    smm_energy[smm_nodeNr].energy=energy;
 
-    smm_nodeNr++;
+    smmObj_nodeNr++;
 
     returm (smm_nodeNr);
 }

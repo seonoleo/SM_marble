@@ -17,18 +17,25 @@
 
 
 //board configuration parameters
-static int board_nr;
-static int food_nr;
-static int festival_nr;
-static int player_nr;
+static int smm_board_nr;
+static int smm_food_nr;
+static int smm_festival_nr;
+static int smm_player_nr;
 
-static int player_pos[MAX_PLAYER];
-static int player_credit[MAX_PLAYER];
-static int player_name[MAX_PLAYER][MAX_CHARNAME];
-static int player_energy[MAX_PLAYER];
 
-void generatePlayers(int n, int initEnergy);
-void printPlayerStatus(void);
+typedef struct
+{
+        char name[MAX_CHARNAME];
+        int pos;
+        int credit;
+        int energy;
+} smm_player_t;
+
+smm_player_t smm_players[MAX_PLAYER];
+
+
+void generatePlayers(int n, int initEnergy);  //generate a new player
+void printPlayerStatus(void);  // print all player status at the beginning of each turn
 
 
 //function prototypes
