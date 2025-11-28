@@ -8,6 +8,14 @@
 #ifndef smm_database_h
 #define smm_database_h
 
+#define SMMNODE_TYPE_LECTURE      0
+#define SMMNODE_TYPE_RESTAURANT   1
+#define SMMNODE_TYPE_LABORATORY   2
+#define SMMNODE_TYPE_HOME         3
+#define SMMNODE_TYPE_GOTOLAB      4
+#define SMMNODE_TYPE_FOODCHANGE   5
+#define SMMNODE_TYPE_FESTIVAL     6
+
 #define LISTNO_NODE             0
 #define LISTNO_FOODCARD         1
 #define LISTNO_FESTCARD         2
