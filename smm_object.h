@@ -34,8 +34,8 @@
 
 
 //object generation
-int smmObj_genNode(char* name, int type, int credit, int energy);
-char* smmObj_getNodeName(int node_nr);
+void* smmObj_genObject(char* name, int objType, int type, int credit, int energy, int grade);
+char* smmObj_getObjectName(int node_nr);
 int smmObj_getNodeType(int node_nr);
 int smmObj_getNodeEnergy(int node_nr);
 char* smmObj_getTypeName(int node_type);

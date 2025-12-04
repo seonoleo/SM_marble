@@ -31,7 +31,7 @@ typedef struct
         int flag_graduated;
 } smm_player_t;
 
-smm_player_t smm_players[MAX_PLAYER];
+smm_player_t *smm_players;
 
 void generatePlayers(int n, int initEnergy);  //generate a new player
 void printPlayerStatus(void);  // print all player status at the beginning of each turn
@@ -69,9 +69,13 @@ int isGraduated(void)//check if any player is graduated
 void goForward(int player, int step)
 { //make player go "step" steps on the board (check if player is graduated)
     int i;
+    void *ptr;
+    
+    
     //player_pos[player] = player_pos[player]+ step;
+    ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
     printf("start from %i(%s) (%i)\n", smm_players[player].pos, 
-                                         smmObj_getNodeName(smm_players[player].pos), step);
+                                         smmObj_getObjectName(ptr), step);
     for (i=0;i<step;i++)
     {
         smm_players[player].pos = (smm_players[player].pos + 1)%smm_board_nr;
@@ -98,6 +102,9 @@ void printPlayerStatus(void)
 void generatePlayers(int n, int initEnergy) //generate a new player
 {
      int i;
+     
+     smm_players = (smm_player_t*)malloc(n*sizeof(smm_player_t));
+     
      for (i=0;i<n;i++)
      {
          smm_players[i].pos = 0;
@@ -119,7 +126,7 @@ int rolldie(int player)
     c = getchar();
     fflush(stdin);
     
-#if 0
+#if 1
     if (c == 'g')
         printGrades(player);
 #endif
@@ -131,9 +138,14 @@ int rolldie(int player)
 //action code when a player stays at a node
 void actionNode(int player)
 {
-     int type = smmObj_getNodeType(smm_players[player].pos);
+     void *ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
+     
+     int type = smmObj_getNodeType(ptr);
      int credit = smmObj_getNodeCredit(smm_players[player].pos);
      int energy = smmObj_getNodeEnergy(smm_players[player].pos);
+     int grade;
+     void *gradePtr;
+     
      
      printf(" --> player%i pos: %i, type: %s, credit: %i, energy: %i\n",
      player, smm_players[player].pos, smm_players[player].pos, 
@@ -142,8 +154,18 @@ void actionNode(int player)
     switch(type)
     {
                 case SMMNODE_TYPE_LECTURE: 
+                if(findGrade(,) == NULL)
+                {
                      smm_players[player].credit += credit;
                      smm_players[player].energy -= energy;
+                     
+                     grade = rand()%SMMNODE_MAX_GRADE;
+                     
+                     gradePtr = smmObj_genObject(smmObj_getObjectName(ptr), SMMNODE_OBJTYPE_GRADE, type,  
+                     credit, energy, int grade);
+                     
+                     smmdb_addTail(LISTNO_OFFSET_GRADE+player, gradePtr);
+                }
                      break;             
                             
                 case SMMNODE_TYPE_RESTAURANT:
@@ -206,9 +228,10 @@ int main(int argc, const char * argv[]) {
     while (fscanf(fp, "%s %i %i %i", name, &type, &credit, &energy)== 4) //read a node parameter set
     {
         //store the parameter set
+        void* ptr;
         printf("%s %i %i %i\n", name, type, credit, energy);
-        smm_board_nr= smmObj_genNode(name, type, credit, energy);
-        
+        ptr = smmObj_genObject(name, SMMNODE_OBJTYPE_BOARD, type, credit, energy, 0);
+        smm_board_nr = smmdb_addTail(LISTNO_NODE, ptr);
     }
     fclose(fp);
     printf("Total number of board nodes : %i\n", smm_board_nr);
@@ -265,8 +288,9 @@ int main(int argc, const char * argv[]) {
     while (smm_player_nr <= 0 || smm_player_nr > MAX_PLAYER);
     
     
-    generatePlayers(smm_player_nr, smmObj_getNodeEnergy(0));
-    
+    generatePlayers(smm_player_nr, smmObj_getNodeEnergy(smmObj_getObjectEnergy(smmdb_getData(SMMNODE_OBJTYPE_BOARD,0))));
+    smmObj_getObjectEnergy(smmdb_getData(SMMNODE_OBJTYPE_BOARD,0))
+
     
   
     turn=0;
@@ -294,6 +318,8 @@ int main(int argc, const char * argv[]) {
        turn= (turn+1)%smm_player_nr;
         
     }
+    
+    free(smm_players);
     
     system("PAUSE");
     return 0;
