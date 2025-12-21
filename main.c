@@ -38,15 +38,122 @@ void printPlayerStatus(void);  // print all player status at the beginning of ea
 
 
 //function prototypes
-#if 0
-void printGrades(int player); //print grade history of the player
 
-float calcAverageGrade(int player); //calculate average grade of the player
-smmGrade_e takeLecture(int player, char *lectureName, int credit); //take the lecture (insert a grade of the player)
-void* findGrade(int player, char *lectureName); //find the grade from the player's grade history
-void printGrades(int player); //print all the grade history of the player
-#endif
+void printGraduatedPlayerGrades(void) 
+{
+    int i,j;
+    for (i=0;i<smm_player_nr;i++) 
+    {
+        if (smm_players[i].flag_graduated) 
+        {
+            printf("\n[Player %s Graduated]\n", smm_players[i].name);
+            int size = smmdb_len(LISTNO_OFFSET_GRADE + i);
+            if (size == 0) 
+            {
+                printf("(No grades recorded)\n");
+                continue;
+            }
+            for (j=0;j<size;j++) 
+            {
+                smmObj_object_t *obj = (smmObj_object_t*)smmdb_getData(LISTNO_OFFSET_GRADE + i, j);
+                if (obj) 
+                {
+                    printf("Lecture: %s, Credit: %d, Grade: %s\n",
+                        obj->name, obj->credit, smmObj_getGradeName(obj->grade));
+                }
+            }
+        }
+    }
+}
 
+
+
+
+void* findGrade(int player, char* lectureName)//find the grade from the player's grade history
+{
+      int size = smmdb_len(LISTNO_OFFSET_GRADE+player);
+      int i;
+      
+      
+      for(i=0;i<size;i++)
+      {
+              void *ptr = smmdb_getData(LISTNO_OFFSET_GRADE+player, i);
+              if(strcmp(smmObj_getObjectNameByPtr(ptr), lectureName) == 0)
+              {
+                   return ptr;
+              }
+      }
+      return NULL;
+}
+      
+      
+smmGrade_e takeLecture(int player, char *lectureName, int credit)
+{
+    
+    if (findGrade(player, lectureName) != NULL)
+        return SMMGRADE_NONE;
+
+    smmGrade_e grade = rand() % SMMNODE_MAX_GRADE;
+
+    void *ptr = smmObj_genObject(lectureName, SMMNODE_OBJTYPE_GRADE,
+        SMMNODE_TYPE_LECTURE,credit,0, grade);
+
+    smmdb_addTail(LISTNO_OFFSET_GRADE + player, ptr);
+
+    return grade;
+}
+
+
+
+
+
+float calcAverageGrade(int player)
+{
+    int i;
+    int size = smmdb_len(LISTNO_OFFSET_GRADE + player);
+    int sum = 0;
+
+    if (size == 0)
+        return 0.0f;
+
+    for (i = 0; i < size; i++)
+    {
+        void *ptr = smmdb_getData(LISTNO_OFFSET_GRADE + player, i);
+        sum += smmObj_getObjectGrade(ptr);
+    }
+
+    return (float)sum / size;
+}
+
+
+
+
+void printGrades(int player)
+{
+    int i;
+    int size = smmdb_len(LISTNO_OFFSET_GRADE + player);
+
+    printf("\n[ Player %d Grade List ]\n", player);
+
+    if (size == 0)
+    {
+        printf(" (no grades yet)\n");
+        return;
+    }
+
+    for (i=0;i<size;i++)
+    {
+        void *ptr = smmdb_getData(LISTNO_OFFSET_GRADE + player, i);
+        smmObj_object_t *obj = (smmObj_object_t*)ptr;
+        printf("%s : grade %d\n",
+               smmObj_getObjectNameByPtr(ptr),
+               obj->grade);
+    }
+}
+
+
+
+                   
 
 int isGraduated(void)//check if any player is graduated
 {
@@ -75,12 +182,13 @@ void goForward(int player, int step)
     //player_pos[player] = player_pos[player]+ step;
     ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
     printf("start from %i(%s) (%i)\n", smm_players[player].pos, 
-                                         smmObj_getObjectName(ptr), step);
+                                          smmObj_getObjectName(smm_players[player].pos)
+                                          , step);
     for (i=0;i<step;i++)
     {
         smm_players[player].pos = (smm_players[player].pos + 1)%smm_board_nr;
         printf("  => moved to %i(%s)\n", smm_players[player].pos, 
-                                         smmObj_getNodeName(smm_players[player].pos));
+                                         smmObj_getObjectName(smm_players[player].pos));
     }
 }
 
@@ -92,7 +200,7 @@ void printPlayerStatus(void)
      {
          printf("%s - position:%i(%s), credit:%i, energy:%i\n",
                     smm_players[i].name, smm_players[i].pos, 
-                    smmObj_getNodeName(smm_players[i].pos), smm_players[i].credit,
+                    smmObj_getObjectName(smm_players[i].pos), smm_players[i].credit,
                     smm_players[i].energy);
      }
 }
@@ -140,32 +248,67 @@ void actionNode(int player)
 {
      void *ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
      
-     int type = smmObj_getNodeType(ptr);
-     int credit = smmObj_getNodeCredit(smm_players[player].pos);
-     int energy = smmObj_getNodeEnergy(smm_players[player].pos);
+     int type = smmObj_getObjectType(smm_players[player].pos);
+     int credit = smmObj_getObjectCredit(smm_players[player].pos);
+     int energy = smmObj_getObjectEnergy(ptr);
      int grade;
      void *gradePtr;
      
      
      printf(" --> player%i pos: %i, type: %s, credit: %i, energy: %i\n",
-     player, smm_players[player].pos, smm_players[player].pos, 
+     player, smm_players[player].pos, 
      smmObj_getTypeName(type), credit, energy);
      
     switch(type)
     {
                 case SMMNODE_TYPE_LECTURE: 
-                if(findGrade(,) == NULL)
-                {
-                     smm_players[player].credit += credit;
-                     smm_players[player].energy -= energy;
-                     
-                     grade = rand()%SMMNODE_MAX_GRADE;
-                     
-                     gradePtr = smmObj_genObject(smmObj_getObjectName(ptr), SMMNODE_OBJTYPE_GRADE, type,  
-                     credit, energy, int grade);
-                     
-                     smmdb_addTail(LISTNO_OFFSET_GRADE+player, gradePtr);
-                }
+                     {
+                        void *ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
+                        int requiredEnergy = smmObj_getObjectEnergy(ptr);
+                        char choice;
+                 
+                        if (findGrade(player, smmObj_getObjectNameByPtr(ptr)) != NULL)
+                        {
+                             printf("You have already taken %s.\n", smmObj_getObjectNameByPtr(ptr));
+                             break;
+                        }
+                        if (smm_players[player].energy < requiredEnergy) 
+                        {
+                             printf("Not enough energy to take %s.\n", smmObj_getObjectNameByPtr(ptr));
+                             break;
+                        }
+
+                       // take or not choice
+                        printf("Do you want to take the lecture %s? (y/n): ", smmObj_getObjectNameByPtr(ptr));
+                        scanf(" %c", &choice);
+                        fflush(stdin);
+
+                        if (choice == 'y' || choice == 'Y') 
+                        {
+                         // take
+                             smm_players[player].credit += smmObj_getObjectCredit(smm_players[player].pos);
+                             smm_players[player].energy -= requiredEnergy;
+
+                         // random grade
+                             smmGrade_e grade = rand() % SMMNODE_MAX_GRADE;
+
+                             void *gradePtr = smmObj_genObject(smmObj_getObjectNameByPtr(ptr),
+                                              SMMNODE_OBJTYPE_GRADE, SMMNODE_TYPE_LECTURE,
+                                              smmObj_getObjectCredit(smm_players[player].pos),
+                                              requiredEnergy, grade);
+
+                             smmdb_addTail(LISTNO_OFFSET_GRADE + player, gradePtr);
+
+                             printf("You took %s. Earned credit: %d, Grade: %s\n",
+                                                   smmObj_getObjectNameByPtr(ptr),
+                                                   smmObj_getObjectCredit(smm_players[player].pos),
+                                                   smmObj_getGradeName(grade));
+                        } 
+                        else 
+                        {
+                        printf("You chose not to take %s.\n", smmObj_getObjectNameByPtr(ptr));
+                        }
+                     }
                      break;             
                             
                 case SMMNODE_TYPE_RESTAURANT:
@@ -177,7 +320,7 @@ void actionNode(int player)
                      
                 case SMMNODE_TYPE_HOME:
                      smm_players[player].energy += energy;
-                     if(smm_players[player].credit <= GRADUATE_CREDIT)
+                     if(smm_players[player].credit >= GRADUATE_CREDIT)
                      {
                          smm_players[player].flag_graduated =1;
                      }
@@ -206,7 +349,7 @@ int main(int argc, const char * argv[]) {
     int type;
     int credit;
     int energy;
-    int turn;
+    int turn=0;
     
     smm_board_nr = 0;
     smm_food_nr = 0;
@@ -237,7 +380,7 @@ int main(int argc, const char * argv[]) {
     printf("Total number of board nodes : %i\n", smm_board_nr);
     
     
-    #if 0
+
     //2. food card config 
     if ((fp = fopen(FOODFILEPATH,"r")) == NULL)
     {
@@ -246,9 +389,18 @@ int main(int argc, const char * argv[]) {
     }
     
     printf("\n\nReading food card component......\n");
-    while () //read a food parameter set
+    while (fscanf(fp, "%s %i", name, &energy) == 2) //read a food parameter set
     {
         //store the parameter set
+        void *ptr;
+
+        printf("%s %i\n", name, energy);
+
+        ptr = smmObj_genObject( name,
+            SMMNODE_OBJTYPE_FOOD, SMMNODE_TYPE_FOODCHANGE, 0,energy,0);
+
+        smmdb_addTail(LISTNO_FOODCARD, ptr);
+        smm_food_nr++;
     }
     fclose(fp);
     printf("Total number of food cards : %i\n", smm_food_nr);
@@ -263,15 +415,23 @@ int main(int argc, const char * argv[]) {
     }
     
     printf("\n\nReading festival card component......\n");
-    while () //read a festival card string
+    while (fscanf(fp, "%s", name) == 1) //read a festival card string
     {
-        //store the parameter set
+        void *ptr;
+
+        printf("%s\n", name);
+
+        ptr = smmObj_genObject(
+            name,
+            SMMNODE_OBJTYPE_FEST,
+            SMMNODE_TYPE_FESTIVAL, 0,0,0);
+        smmdb_addTail(LISTNO_FESTCARD, ptr);
+        smm_festival_nr++;//store the parameter set
     }
     fclose(fp);
     printf("Total number of festival cards : %i\n", smm_festival_nr);
     
     
-    #endif
     //2. Player configuration ---------------------------------------------------------------------------------
     
     do
@@ -288,8 +448,7 @@ int main(int argc, const char * argv[]) {
     while (smm_player_nr <= 0 || smm_player_nr > MAX_PLAYER);
     
     
-    generatePlayers(smm_player_nr, smmObj_getNodeEnergy(smmObj_getObjectEnergy(smmdb_getData(SMMNODE_OBJTYPE_BOARD,0))));
-    smmObj_getObjectEnergy(smmdb_getData(SMMNODE_OBJTYPE_BOARD,0))
+    generatePlayers(smm_player_nr, smmObj_getObjectEnergy(smmdb_getData(LISTNO_NODE,0)));
 
     
   
@@ -318,7 +477,7 @@ int main(int argc, const char * argv[]) {
        turn= (turn+1)%smm_player_nr;
         
     }
-    
+    printGraduatedPlayerGrades();
     free(smm_players);
     
     system("PAUSE");

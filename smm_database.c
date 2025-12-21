@@ -137,7 +137,7 @@ int smmdb_addTail(int list_nr, void* obj)
     
     list_cnt[list_nr]++;
     
-    return 0;
+    return list_cnt[list_nr];
 }
 
 
