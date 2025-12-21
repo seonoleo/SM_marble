@@ -55,10 +55,10 @@ char* smmObj_getTypeName(int node_type);
 int smmObj_getObjectCredit(void *ptr);
 char* smmObj_getObjectNameByPtr(void *ptr);
 int   smmObj_getObjectGrade(void *ptr);
+int smmObj_getObjectType(void* ptr);
 
 
 //member retrieving
-
 
 //element to string
 

@@ -88,6 +88,11 @@ void* smmObj_genObject(char* name, int objType, int type, int credit, int energy
 
 
 //member retrieving
+int smmObj_getObjectType(void* ptr) {
+    if (!ptr) return -1;
+    return ((smmObj_object_t*)ptr)->type;
+}
+
 char* smmObj_getObjectNameByPtr(void* ptr)
 {
     if (!ptr) return NULL;
@@ -122,6 +127,8 @@ char* smmObj_getGradeName(smmGrade_e grade)
 {
     return smmObj_gradeName[grade];
 }
+
+
 
 
 

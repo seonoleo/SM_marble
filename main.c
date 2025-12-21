@@ -60,7 +60,7 @@ void printGraduatedPlayerGrades(void)
                 { 
                     printf("Lecture: %s, Credit: %d, Grade: %s\n", 
                         smmObj_getObjectNameByPtr(ptr), 
-                        smmObj_getObjectCreditByPtr(ptr), 
+                        smmObj_getObjectCredit(ptr), 
                         smmObj_getGradeName(smmObj_getObjectGrade(ptr)));
                 }
             }
@@ -150,7 +150,7 @@ void printGrades(int player)
         {
             printf("%s : grade %s, credit: %d\n",smmObj_getObjectNameByPtr(ptr),
                    smmObj_getGradeName(smmObj_getObjectGrade(ptr)),
-                   smmObj_getObjectCreditByPtr(ptr)); 
+                   smmObj_getObjectCredit(ptr)); 
         }
     }
 }
@@ -186,13 +186,13 @@ void goForward(int player, int step)
     //player_pos[player] = player_pos[player]+ step;
     ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
     printf("start from %i(%s) (%i)\n", smm_players[player].pos, 
-                                          smmObj_getObjectName(smm_players[player].pos)
-                                          , step);
+                                       smmObj_getObjectNameByPtr(ptr), step);
     for (i=0;i<step;i++)
     {
         smm_players[player].pos = (smm_players[player].pos + 1)%smm_board_nr;
+        ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
         printf("  => moved to %i(%s)\n", smm_players[player].pos, 
-                                         smmObj_getObjectName(smm_players[player].pos));
+                                         smmObj_getObjectNameByPtr(ptr));
     }
 }
 
@@ -200,11 +200,13 @@ void goForward(int player, int step)
 void printPlayerStatus(void)
 {
      int i;
+     void *ptr;
      for (i=0;i<smm_player_nr;i++)
      {
+         ptr = smmdb_getData(LISTNO_NODE, smm_players[i].pos);
          printf("%s - position:%i(%s), credit:%i, energy:%i\n",
                     smm_players[i].name, smm_players[i].pos, 
-                    smmObj_getObjectName(smm_players[i].pos), smm_players[i].credit,
+                    smmObj_getObjectNameByPtr(ptr), smm_players[i].credit,
                     smm_players[i].energy);
      }
 }
@@ -252,8 +254,8 @@ void actionNode(int player)
 {
      void *ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
      
-     int type = smmObj_getObjectType(smm_players[player].pos);
-     int credit = smmObj_getObjectCredit(smm_players[player].pos);
+     int type = smmObj_getObjectType(ptr);
+     int credit = smmObj_getObjectCredit(ptr);
      int energy = smmObj_getObjectEnergy(ptr);
      int grade;
      void *gradePtr;
@@ -287,10 +289,10 @@ void actionNode(int player)
                         scanf(" %c", &choice);
                         fflush(stdin);
 
-                        if (choice=='y' || choice=='Y') 
+                        if (choice=='y') 
                         {
                          // take
-                             smm_players[player].credit += smmObj_getObjectCredit(smm_players[player].pos);
+                             smm_players[player].credit += smmObj_getObjectCredit(ptr);
                              smm_players[player].energy -= requiredEnergy;
 
                          // random grade
@@ -299,14 +301,14 @@ void actionNode(int player)
                              void *gradePtr = smmObj_genObject(smmObj_getObjectNameByPtr(ptr),
                                                                SMMNODE_OBJTYPE_GRADE,
                                                                SMMNODE_TYPE_LECTURE,
-                                                               smmObj_getObjectCreditByPtr(ptr),
+                                                               smmObj_getObjectCredit(ptr),
                                                                requiredEnergy, grade);
 
                              smmdb_addTail(LISTNO_OFFSET_GRADE + player, gradePtr);
 
                              printf("You took %s. Earned credit: %d, Grade: %s\n",
                                                    smmObj_getObjectNameByPtr(ptr),
-                                                   smmObj_getObjectCreditByPtr(ptr),
+                                                   smmObj_getObjectCredit(ptr),
                                                    smmObj_getGradeName(grade));
                         } 
                         else 
