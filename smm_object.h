@@ -48,21 +48,11 @@ typedef enum {
 
 
 //object generation
-typedef struct {
-    char name[MAX_CHARNAME];
-    int objType;
-    int type;
-    int credit;
-    int energy;
-    smmGrade_e grade;
-} smmObj_object_t;
 
 void* smmObj_genObject(char* name, int objType, int type, int credit, int energy, int grade);
-char* smmObj_getObjectName(int node_nr);
-int smmObj_getObjectType(int node_nr);
 int smmObj_getObjectEnergy(void *ptr);
 char* smmObj_getTypeName(int node_type);
-int smmObj_getObjectCredit(int node_nr);
+int smmObj_getObjectCredit(void *ptr);
 char* smmObj_getObjectNameByPtr(void *ptr);
 int   smmObj_getObjectGrade(void *ptr);
 

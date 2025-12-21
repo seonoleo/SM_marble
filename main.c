@@ -46,20 +46,22 @@ void printGraduatedPlayerGrades(void)
     {
         if (smm_players[i].flag_graduated) 
         {
-            printf("\n[Player %s Graduated]\n", smm_players[i].name);
+            printf("\nPlayer %s Graduated\n", smm_players[i].name);
             int size = smmdb_len(LISTNO_OFFSET_GRADE + i);
             if (size == 0) 
             {
-                printf("(No grades recorded)\n");
+                printf("No grades recorded\n");
                 continue;
             }
             for (j=0;j<size;j++) 
             {
-                smmObj_object_t *obj = (smmObj_object_t*)smmdb_getData(LISTNO_OFFSET_GRADE + i, j);
-                if (obj) 
-                {
-                    printf("Lecture: %s, Credit: %d, Grade: %s\n",
-                        obj->name, obj->credit, smmObj_getGradeName(obj->grade));
+                void *ptr = smmdb_getData(LISTNO_OFFSET_GRADE + i, j);
+                if (ptr)  
+                { 
+                    printf("Lecture: %s, Credit: %d, Grade: %s\n", 
+                        smmObj_getObjectNameByPtr(ptr), 
+                        smmObj_getObjectCreditByPtr(ptr), 
+                        smmObj_getGradeName(smmObj_getObjectGrade(ptr)));
                 }
             }
         }
@@ -133,21 +135,23 @@ void printGrades(int player)
     int i;
     int size = smmdb_len(LISTNO_OFFSET_GRADE + player);
 
-    printf("\n[ Player %d Grade List ]\n", player);
+    printf("\n Player %d Grade List\n",smm_players[player].name);
 
     if (size == 0)
     {
-        printf(" (no grades yet)\n");
+        printf("no grades yet\n");
         return;
     }
 
     for (i=0;i<size;i++)
     {
         void *ptr = smmdb_getData(LISTNO_OFFSET_GRADE + player, i);
-        smmObj_object_t *obj = (smmObj_object_t*)ptr;
-        printf("%s : grade %d\n",
-               smmObj_getObjectNameByPtr(ptr),
-               obj->grade);
+        if(ptr)
+        {
+            printf("%s : grade %s, credit: %d\n",smmObj_getObjectNameByPtr(ptr),
+                   smmObj_getGradeName(smmObj_getObjectGrade(ptr)),
+                   smmObj_getObjectCreditByPtr(ptr)); 
+        }
     }
 }
 
@@ -283,7 +287,7 @@ void actionNode(int player)
                         scanf(" %c", &choice);
                         fflush(stdin);
 
-                        if (choice == 'y' || choice == 'Y') 
+                        if (choice=='y' || choice=='Y') 
                         {
                          // take
                              smm_players[player].credit += smmObj_getObjectCredit(smm_players[player].pos);
@@ -293,15 +297,16 @@ void actionNode(int player)
                              smmGrade_e grade = rand() % SMMNODE_MAX_GRADE;
 
                              void *gradePtr = smmObj_genObject(smmObj_getObjectNameByPtr(ptr),
-                                              SMMNODE_OBJTYPE_GRADE, SMMNODE_TYPE_LECTURE,
-                                              smmObj_getObjectCredit(smm_players[player].pos),
-                                              requiredEnergy, grade);
+                                                               SMMNODE_OBJTYPE_GRADE,
+                                                               SMMNODE_TYPE_LECTURE,
+                                                               smmObj_getObjectCreditByPtr(ptr),
+                                                               requiredEnergy, grade);
 
                              smmdb_addTail(LISTNO_OFFSET_GRADE + player, gradePtr);
 
                              printf("You took %s. Earned credit: %d, Grade: %s\n",
                                                    smmObj_getObjectNameByPtr(ptr),
-                                                   smmObj_getObjectCredit(smm_players[player].pos),
+                                                   smmObj_getObjectCreditByPtr(ptr),
                                                    smmObj_getGradeName(grade));
                         } 
                         else 
